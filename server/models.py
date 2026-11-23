@@ -43,7 +43,17 @@ class Recipe(db.Model):
     user = db.relationship('User', back_populates='recipes')
 
 class UserSchema(Schema):
-    pass
+    id = fields.Int()
+    username = fields.Str()
+    image_url = fields.Str()
+    bio = fields.Str()
+
+    recipes = fields.List(fields.Nested(lambda: RecipeSchema(exclude=('user',))))
 
 class RecipeSchema(Schema):
-    pass
+    id = fields.Int()
+    title = fields.Str()
+    instructions = fields.Str()
+    minutes_to_complete = fields.Int()
+
+    user = fields.Nested(lambda: UserSchema(exclude=('recipes',)))

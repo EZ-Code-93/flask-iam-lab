@@ -8,7 +8,29 @@ from config import app, db, api
 from models import User, Recipe, UserSchema, RecipeSchema
 
 class Signup(Resource):
-    pass
+    def post(self):
+        data = request.get_json()
+
+        username = data.get('username')
+        password = data.get('password')
+        image_url = data.get('image_url')
+        bio = data.get('bio')
+
+        user = User(
+            username=username,
+            image_url=image_url,
+            bio=bio
+        )
+
+        user.password_hash = password
+
+        try:
+            db.session.add(user)
+            db.session.commit()
+            session['user_id'] = user.id
+            return UserSchema().dump(user), 201
+        except IntegrityError:
+            return {'error': '422 Unprocessable Entity'}, 422
 
 class CheckSession(Resource):
     pass

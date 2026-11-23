@@ -65,7 +65,7 @@ class Logout(Resource):
 
 class RecipeIndex(Resource):
     def get(self):
-        recipes = [RecipeSchema().dump(recipe) for recipe in Recipe.query.all()]
+        recipes = [RecipeSchema().dump(recipe) for recipe in Recipe.query.filter(Recipe.user_id == session['user_id']).all()]
         if session.get('user_id') is None:
             return {'error': '401 Unauthorized'}, 401
         return recipes, 200
@@ -76,18 +76,19 @@ class RecipeIndex(Resource):
 
         data = request.get_json()
 
-        recipe = Recipe(
-            title=data.get('title'),
-            instructions=data.get('instructions'),
-            minutes_to_complete=data.get('minutes_to_complete'),
-            user_id=session['user_id']
-        )
-
         try:
+            recipe = Recipe(
+                title=data.get('title'),
+                instructions=data.get('instructions'),
+                minutes_to_complete=data.get('minutes_to_complete'),
+                user_id=session['user_id']
+            )
+
             db.session.add(recipe)
             db.session.commit()
             return RecipeSchema().dump(recipe), 201
-        except IntegrityError:
+        except (IntegrityError, ValueError):
+            db.session.rollback()
             return {'error': '422 Unprocessable Entity'}, 422
       
 
